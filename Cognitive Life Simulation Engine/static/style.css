@@ -1,0 +1,28 @@
+body {
+    font-family: Arial;
+    background: #111;
+    color: white;
+}
+
+.agents {
+    display: flex;
+    gap: 15px;
+}
+
+.card {
+    background: #222;
+    padding: 15px;
+    border-radius: 10px;
+    width: 150px;
+}
+
+.timeline {
+    margin-top: 20px;
+}
+
+.time-block {
+    background: #1a1a1a;
+    margin: 10px 0;
+    padding: 10px;
+    border-left: 4px solid cyan;
+}

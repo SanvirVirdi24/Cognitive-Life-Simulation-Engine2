@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cognitive Life Simulation</title>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial;
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: #020617;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            background: #38bdf8;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            opacity: 0.85;
+            transform: scale(1.03);
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button#stopBtn {
+            background: #f87171;
+        }
+
+        button#startBtn {
+            background: #34d399;
+        }
+
+        #status {
+            display: inline-block;
+            margin-left: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            background: #1e293b;
+            color: #94a3b8;
+            vertical-align: middle;
+        }
+
+        #status.running {
+            background: #064e3b;
+            color: #34d399;
+        }
+
+        #status.stopped {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .chat {
+            width: 70%;
+            padding: 20px;
+        }
+
+        .msg {
+            background: #1e293b;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid cyan;
+        }
+
+        .sidebar {
+            width: 30%;
+            background: #020617;
+            padding: 15px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>🧠 Cognitive Life Simulation Engine</h1>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn" onclick="startSim()">▶ Start</button>
+        <button onclick="runStep()">⏭ Next</button>
+        <button id="stopBtn" onclick="stopSim()">⏹ Stop</button>
+        <span id="status">● Idle</span>
+    </div>
+
+    <div class="container">
+
+        <div id="chat" class="chat"></div>
+
+        <div class="sidebar">
+            <h3>Agent Stats</h3>
+            <div id="stats"></div>
+        </div>
+
+    </div>
+
+    <script>
+        function setStatus(state) {
+            const s = document.getElementById('status');
+            if (state === 'running') {
+                s.textContent = '● Running';
+                s.className = 'running';
+            } else if (state === 'stopped') {
+                s.textContent = '● Stopped';
+                s.className = 'stopped';
+            } else {
+                s.textContent = '● Idle';
+                s.className = '';
+            }
+        }
+
+        function startSim() {
+            fetch('/start')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'started') {
+                        document.getElementById('chat').innerHTML = '';
+                        document.getElementById('stats').innerHTML = '';
+                        setStatus('running');
+                    }
+                })
+                .catch(err => console.error('Start error:', err));
+        }
+
+        function runStep() {
+            fetch('/step')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.logs) return;
+
+                    const chat = document.getElementById('chat');
+
+                    data.logs.forEach(log => {
+                        let div = document.createElement('div');
+                        div.className = 'msg';
+                        div.innerText = log;
+                        chat.appendChild(div);
+                        div.scrollIntoView({ behavior: 'smooth' });
+                    });
+
+                    updateStats(data.agents);
+                })
+                .catch(err => console.error('Step error:', err));
+        }
+
+        function stopSim() {
+            fetch('/stop')
+                .then(res => res.json())
+                .then(() => setStatus('stopped'))
+                .catch(err => console.error('Stop error:', err));
+        }
+
+        function updateStats(agents) {
+            const stats = document.getElementById("stats");
+            stats.innerHTML = "";
+
+            agents.forEach(a => {
+                let div = document.createElement("div");
+                div.className = "card";
+
+                let color = a.stress > 7 ? "red" : a.stress > 4 ? "orange" : "green";
+
+                div.style.borderLeft = "5px solid " + color;
+
+                div.innerHTML = `
+<b>${a.name}</b><br>
+Stress: ${a.stress}<br>
+Emotion: ${a.emotion}
+`;
+
+                stats.appendChild(div);
+            });
+        }
+    </script>
+
+</body>
+
+</html>
